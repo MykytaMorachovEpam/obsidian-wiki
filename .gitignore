@@ -1,0 +1,23 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE / Editor
+.vscode/
+
+# Kiro config (root level)
+/.kiro/
+
+# AI-DLC docs
+aidlc-docs/
+
+# Obsidian (local workspace state)
+vault/.obsidian/workspace.json
+
+# Vault: raw sources, wiki, output (keep dirs via .gitkeep)
+vault/raw/*
+!vault/raw/.gitkeep
+vault/wiki/*
+!vault/wiki/.gitkeep
+vault/output/*
+!vault/output/.gitkeep
