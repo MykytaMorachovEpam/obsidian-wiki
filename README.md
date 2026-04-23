@@ -89,6 +89,10 @@ The wiki supports 10 page types:
 
 See `AGENTS.md` for the full schema, templates, and conventions.
 
+## Inspiration
+
+This project is based on the [LLM-Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) concept by [Andrej Karpathy](https://karpathy.ai) — the idea that instead of re-deriving knowledge from raw documents on every query (traditional RAG), an LLM can incrementally build and maintain a persistent, compounding wiki. The wiki becomes a structured artifact where cross-references, contradictions, and syntheses are compiled once and kept current, not rediscovered from scratch each time.
+
 ## License
 
-Private repository. Not licensed for redistribution.
+MIT — see [LICENSE](LICENSE).
