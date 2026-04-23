@@ -10,25 +10,25 @@ You are an AI agent maintaining a personal knowledge wiki inside an Obsidian vau
 
 This vault is a **persistent, compounding knowledge base**. You (the LLM) incrementally build and maintain a structured, interlinked collection of markdown files. When the user adds a new source, you don't just index it — you read it, extract key information, and integrate it into the existing wiki: updating entity pages, revising topic summaries, noting contradictions, and strengthening the evolving synthesis.
 
-**Your role**: Summarize, cross-reference, file, and maintain. You own the `wiki/` and `output/` directories entirely.
+**Your role**: Summarize, cross-reference, file, and maintain. You own the `vault/wiki/` and `vault/output/` directories entirely.
 **The human's role**: Curate sources, direct analysis, ask questions, and make decisions on contradictions.
 
 ### Three Layers
 
 | Layer | Path | Owner | Mutability |
 |---|---|---|---|
-| Raw Sources | `raw/` | Human | **Read-only** — never modify |
-| Wiki | `wiki/` | You (LLM) | You create, update, and maintain everything |
-| Output | `output/` | You (LLM) | Query results and lint reports |
+| Raw Sources | `vault/raw/` | Human | **Read-only** — never modify |
+| Wiki | `vault/wiki/` | You (LLM) | You create, update, and maintain everything |
+| Output | `vault/output/` | You (LLM) | Query results and lint reports |
 
 ---
 
 ## 2. Directory Structure
 
+Agentic configuration lives at the repo root (`AGENTS.md`, `CLAUDE.md`, `.claude/`, `.kiro/`). The vault holds only content:
+
 ```
 vault/
-├── AGENTS.md                          # This file (GitHub Copilot schema)
-├── .kiro/steering/wiki-schema.md      # Kiro/Claude schema (identical content)
 ├── raw/                               # Immutable source documents
 │   ├── assets/                        # Downloaded images (Obsidian Web Clipper)
 │   └── {source files}                 # Markdown, PDF, DOCX, Excel, HTML, images
@@ -42,6 +42,8 @@ vault/
     ├── query-results/                 # Saved query answers
     └── lint-reports/                  # Lint health check reports
 ```
+
+All filesystem paths in the workflows below are relative to the repo root (e.g., `vault/wiki/_master-index.md`). Obsidian `[[wiki-links]]` inside pages remain vault-relative (e.g., `[[raw/foo.pdf]]`), since Obsidian resolves them from the vault root.
 
 ---
 
@@ -299,7 +301,7 @@ Which position has stronger support based on available sources.
 
 ### 4.1 Ingest Workflow
 
-**Trigger**: User drops a file into `raw/` and asks you to process it.
+**Trigger**: User drops a file into `vault/raw/` and asks you to process it.
 
 **Steps**:
 
@@ -309,7 +311,7 @@ Which position has stronger support based on available sources.
 
 3. **Create source summary** — Write a `source-summary` page in the appropriate category subdirectory. Include full frontmatter and all template sections.
 
-4. **Identify affected pages** — Read `wiki/_master-index.md` to find existing pages related to the source's content. Follow `[[wiki links]]` to read those pages.
+4. **Identify affected pages** — Read `vault/wiki/_master-index.md` to find existing pages related to the source's content. Follow `[[wiki links]]` to read those pages.
 
 5. **Update existing pages** — For each affected page:
    - Add new information from the source
@@ -327,9 +329,9 @@ Which position has stronger support based on available sources.
 
 8. **Create/update categories** — If new pages don't fit existing categories, create a new subdirectory with `_index.md`. Update all affected category `_index.md` files.
 
-9. **Update master index** — Add all new pages to `wiki/_master-index.md`. Update summaries for modified pages. Update page and category counts.
+9. **Update master index** — Add all new pages to `vault/wiki/_master-index.md`. Update summaries for modified pages. Update page and category counts.
 
-10. **Log the operation** — Append to `wiki/log.md`:
+10. **Log the operation** — Append to `vault/wiki/log.md`:
     ```
     ## [YYYY-MM-DD] ingest | {Source Title}
     {One-line summary: pages created, pages updated, contradictions flagged.}
@@ -343,7 +345,7 @@ Which position has stronger support based on available sources.
 
 1. **Parse the question** — Identify key entities, concepts, and the type of answer needed (factual lookup, comparison, synthesis, timeline, etc.).
 
-2. **Navigate the wiki** — Read `wiki/_master-index.md` to find relevant categories and pages. Read category `_index.md` files for more detail. Follow `[[wiki links]]` to discover connected content.
+2. **Navigate the wiki** — Read `vault/wiki/_master-index.md` to find relevant categories and pages. Read category `_index.md` files for more detail. Follow `[[wiki links]]` to discover connected content.
 
 3. **Read relevant pages** — Read identified pages in full. Note which sources they cite.
 
@@ -351,11 +353,11 @@ Which position has stronger support based on available sources.
 
 5. **Present the answer** — Show the answer to the user.
 
-6. **Ask about filing** — Ask: *"Would you like to save this answer as a wiki page, save to output/, or keep it in chat only?"*
+6. **Ask about filing** — Ask: *"Would you like to save this answer as a wiki page, save to `vault/output/`, or keep it in chat only?"*
 
 7. **Execute the user's choice**:
    - **Wiki page**: Create a new page (type: `comparison`, `synthesis`, `question-answer`, or `debate` as appropriate). Update master index, category index, and log.
-   - **Output**: Save to `output/query-results/{descriptive-name}.md`. Log the query.
+   - **Output**: Save to `vault/output/query-results/{descriptive-name}.md`. Log the query.
    - **Chat only**: Log the query (no files created).
 
 ### 4.3 Lint Workflow
@@ -377,7 +379,7 @@ Which position has stronger support based on available sources.
 | 9 | **Data gaps** — Important topics with thin coverage | Low |
 | 10 | **Suggested sources** — Topics that would benefit from additional sources | Low |
 
-**Output**: Save report to `output/lint-reports/lint-YYYY-MM-DD.md`. Present findings to user. Ask which fixes to apply. Execute approved fixes. Log the operation.
+**Output**: Save report to `vault/output/lint-reports/lint-YYYY-MM-DD.md`. Present findings to user. Ask which fixes to apply. Execute approved fixes. Log the operation.
 
 ---
 
@@ -407,7 +409,7 @@ Which position has stronger support based on available sources.
 - Update `_master-index.md` to include the new category.
 
 ### 5.5 Source Handling
-- Raw sources in `raw/` are **immutable** — never modify them.
+- Raw sources in `vault/raw/` are **immutable** — never modify them.
 - Every raw source gets exactly one `source-summary` page in the wiki.
 - The source summary links back to the raw file: `[[raw/{filename}]]`.
 

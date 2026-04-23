@@ -22,41 +22,53 @@ The vault has three layers:
 
 ### Prerequisites
 - [Obsidian](https://obsidian.md) (for browsing the wiki and graph view)
-- An LLM-powered IDE with file access — [Kiro](https://kiro.dev), Cursor, or similar
+- An LLM-powered IDE with file access — [Claude Code](https://claude.com/claude-code), [Kiro](https://kiro.dev), GitHub Copilot, Cursor, or similar
 
 ### Setup
 
 1. Clone this repo
 2. Open the `vault/` folder as an Obsidian vault
-3. Add source documents to `vault/raw/`
-4. Tell the LLM: *"Ingest the new file in raw/"*
-5. Browse the generated wiki in Obsidian — follow links, explore the graph view
+3. Open the **repo root** in your LLM-powered IDE (Claude Code, Kiro, etc.)
+4. Add source documents to `vault/raw/`
+5. Tell the LLM: *"Ingest the new file in vault/raw/"* (Claude Code: `/ingest <file>`)
+6. Browse the generated wiki in Obsidian — follow links, explore the graph view
 
 ### Agent Configuration
 
-The LLM schema is defined in two places (identical content, different IDE conventions):
+The canonical schema lives at the repo root in `AGENTS.md`. Each supported agent picks it up via its own entry point:
 
-- `vault/AGENTS.md` — for GitHub Copilot and general agents
-- `vault/.kiro/steering/wiki-schema.md` — for Kiro IDE
+| Agent | Entry point | How it loads AGENTS.md |
+|---|---|---|
+| Claude Code | `CLAUDE.md` | `@AGENTS.md` import |
+| Kiro | `.kiro/steering/wiki-schema.md` | Delegates sections to AGENTS.md; `inclusion: auto` |
+| GitHub Copilot / generic | `AGENTS.md` | Read directly |
 
-These files define the page types, frontmatter schema, workflow steps, linking conventions, and style guide the LLM follows.
+`AGENTS.md` defines the page types, frontmatter schema, workflow steps, linking conventions, and style guide.
+
+**Claude Code also ships with:**
+- `.claude/settings.json` — permissions enforcing layer ownership (`vault/raw/` read-only; `vault/wiki/` and `vault/output/` writable)
+- `.claude/commands/` — slash commands `/ingest`, `/query`, `/lint` (thin pointers to AGENTS.md §4.1–§4.3)
 
 ## Repository Structure
 
 ```
 .
 ├── README.md
+├── AGENTS.md                      # Canonical LLM schema (single source of truth)
+├── CLAUDE.md                      # Claude Code entry point (imports AGENTS.md)
+├── .claude/                       # Claude Code configuration
+│   ├── settings.json              # Permissions (raw/ read-only, wiki/output writable)
+│   └── commands/                  # /ingest, /query, /lint slash commands
+├── .kiro/steering/                # Kiro entry point (references AGENTS.md)
 ├── .gitignore
 └── vault/
-    ├── AGENTS.md                  # LLM agent schema
-    ├── .kiro/steering/            # Kiro-specific steering
     ├── .obsidian/                 # Obsidian config
     ├── raw/                       # Source documents (gitignored)
     ├── wiki/                      # LLM-generated wiki (gitignored)
     └── output/                    # Query results & reports (gitignored)
 ```
 
-`raw/`, `wiki/`, and `output/` are gitignored — the wiki is generated from your sources and can be rebuilt by re-ingesting them.
+`vault/raw/`, `vault/wiki/`, and `vault/output/` are gitignored — the wiki is generated from your sources and can be rebuilt by re-ingesting them.
 
 ## Wiki Schema
 
@@ -75,7 +87,7 @@ The wiki supports 10 page types:
 | `question-answer` | A question and its synthesized answer |
 | `debate` | Opposing viewpoints on a contested topic |
 
-See `vault/AGENTS.md` for the full schema, templates, and conventions.
+See `AGENTS.md` for the full schema, templates, and conventions.
 
 ## License
 
